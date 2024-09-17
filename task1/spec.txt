@@ -1,0 +1,134 @@
+===== Spec avant correction =====
+Framework de communications entre tâches (threads)
+Chaque tâche possède un broker : interface de communication permettant d'accèder aux autres tâches 5via leur broker)
+Deux broker peuvent communiquer si ils on établit une connexion entre eux : un channel
+
+Broker:
+identifié par une chaine de caractères (nom)
+Channel accept(port) : permet de confirmer une requete de connexion d'un autre Broker sur un port spécifique (on retourne le channel utilisé ppour la communication)
+Channel connect(name, port) : permet d'envoyer une une requete de connexion à un autre Broker (donc tâche) sur un port spécifique (on retourne le channel utilisé ppour la communication)
+
+Channel
+int read(byte[] bytes, int offset, int length); 
+int write(byte[] bytes, int offset, int length);
+void disconnect();
+boolean disconnected();
+
+Task
+Broker getBroker() : permet de récupérer le Broker d'une tâche afin d'entamer la connexion puis échange de données
+
+
+Dans une tâche A de Broker A, à un moent de l'exécution on veut communiquer avec une tache B, 
+on récupère son broker B et on essaie d'obtenir un channel de communications :
+Broker A / connect(b , x), x étant un numéro de port
+Broker B doit accecpter la communication sur le port x. A et B ont ainsi accès au même channel
+
+Puis pour communiquer, on utilise les méthodes read et write, qui permettent de lire/écrire "length" octet dans un tableau d'octets, a aprti de la position offset.
+Avant chaque opération de lecture ou écriture, il faut s'assurer que le Channel est toujours connecté, grâce au booléen disconnnected();
+une fois la communication terminée, on libère le Channel grâce à disconnect()
+
+
+
+===== Notes "correction" =====
+Les tâches sont clients, serveurs, paires. Communiquent via les canaux qui sont établis par les Broker
+Plusieurs Broker possibles
+Broker a un nom unique, pour se connecter besoin du nom et du numéro de port
+Les ports doivent être unique sur un même Broker
+
+Comportement du canal :
+Fifo lossless
+Bidirectionnels
+Flux (pas paquets)
+
+int read(byte[] bytes, int offset, int length); on écrit length au maximum
+int renvoyé correspond au nombre de bytes lu (écrits). -1 peut servir de cas d'erreur (déconnexion)
+Posssibilité de bloquer read si il n'y a rien à lire, bloquer écrire si il n'y a pas de place*
+
+Multithread ?
+Le broker peut être multithreadé
+Synchro Channel ne suffit pas : protège le fonctionnement mais ne garantit pas que les échanges seront corrects
+( !! tester les codes retour !! )
+Disconnect et connect à bien étudier
+
+
+Finir la spec pour le 19/09
+
+
+
+=========  Nouvelle proposition ========
+
+Contexte
+Ce framework a pour objectif d'établir des canaux de communication entre différentes tâches (Task),
+représentées sous forme de threads. Les tâches ont accès à un/des broker :
+interfaces de communication. permettant d'initier des connexions avec d'autres tâches.
+Ces connexions sont des canaux de communication (Channel), aux travers desquels on peut échanger des données (octets).
+
+
+Objectif
+
+Permettre à plusieurs tâches d'interagir entre elles via un broker. La communication doit être bidirectionnelle, ordonnée (FIFO), et sans perte.
+
+
+Description des composants
+1. Broker
+
+Composant central qui permet d'établir des connexions entre différentes tâches. Chaque Broker est identifié par un nom unique
+Il peut gérer plusieurs connexions via des ports spécifiques.
+
+Comportement du Broker :
+
+    Chaque Broker possède un nom unique.
+    Les connexions entre Brokers se font via un nom et un numéro de port spécifique.
+    Les ports sont uniques au sein d’un même Broker.
+
+Méthodes du Broker :
+
+    Channel accept(int port) : Accepte une requête de connexion sur un port donné. Retourne le Channel établi pour la communication.
+    Channel connect(String name, int port) : Envoie une requête de connexion (à ?) Retourne le Channel établi pour la communication.
+
+
+2. Channel
+
+Le Channel est un canal de communication entre deux Tasks. Une fois le canal établi, les tâches peuvent échanger des données sous forme d'octets.
+
+Comportement du Channel :
+
+    Les canaux sont FIFO.
+    Bidirectionnels : envoi et réception de données possible simultanément.
+    Les canaux gèrent des flux continus (pas de paquets discrets).
+    Lossless, garantissant qu'aucune donnée n'est perdue lors de la transmission.
+    La méthode read peut bloquer si aucune donnée n'est disponible pour lecture, et write peut bloquer si l'espace tampon est plein.
+
+Méthodes du Channel :
+
+    int read(byte[] bytes, int offset, int length) : Tente de lire jusqu'à length octets à partir de la position offset dans le tableau d'octets bytes. Retourne le nombre d'octets lus, ou -1 en cas d'erreur (ex : déconnexion).
+    int write(byte[] bytes, int offset, int length) : Écrit jusqu'à length octets à partir du tableau bytes, en commençant à la position offset. Retourne le nombre d'octets effectivement écrits.
+    void disconnect() : Ferme le canal de communication. (Erreurs à étudier)
+    boolean disconnected() : Retourne true si le canal est déconnecté, sinon false.
+
+3. Task
+
+Une Task est une entité de traitement représentée par un thread. Une tâche peut connaître un Broker pour gérer ses communications.
+
+Méthodes de la Task :
+
+    Broker getBroker() : Retourne le Broker associé à cette tâche, pour initier ou accepter des connexions avec d'autres tâches.
+
+4. Multithreading et Synchronisation
+
+    Le Broker peut être multithreadé, permettant la gestion concurrente de plusieurs connexions.
+    Pour Channel, protéger les opérations internes (lecture/écriture) par synchronisation ne suffit pas.
+    Une gestion explicite des codes de retour est nécessaire à l'ordonnacement de données entre plusieurs threads.
+    
+
+
+
+
+
+
+
+
+
+
+
+
