@@ -1,5 +1,5 @@
 package task1.tests.echo;
-s
+
 public class EchoTest {
     public static void main(String[] args) {
         // Créer un Broker partagé

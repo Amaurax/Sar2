@@ -1,0 +1,46 @@
+package task1.tests.echo;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class EchoServer extends Task {
+    private int port;
+    private List<Channel> clients;
+
+    public EchoServer(Broker broker, int port) {
+        super(broker);
+        this.port = port;
+        this.clients = new ArrayList<>();
+    }
+
+    @Override
+    public void run() {
+        try {
+            // Le serveur attend et accepte plusieurs connexions clients
+            while (true) {
+                Channel channel = broker.accept(port);
+                clients.add(channel);
+
+                // Thread séparé pour gérer chaque client
+                new Thread(() -> handleClient(channel)).start();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void handleClient(Channel channel) {
+        byte[] buffer = new byte[256];
+        try {
+            int bytesRead;
+            while ((bytesRead = channel.read(buffer, 0, buffer.length)) != -1) {
+                // Réponse immédiate : renvoie les mêmes données
+                channel.write(buffer, 0, bytesRead);
+            }
+            channel.disconnect();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+

@@ -1,0 +1,28 @@
+package task1.tests.echo;
+
+public class EchoTest {
+    public static void main(String[] args) {
+        // Configuration d'un Broker (implémentation à définir)
+        Broker broker = new Broker("TestBroker"); 
+
+        // Lancer le serveur d'écho
+        EchoServer server = new EchoServer(broker, 3);
+        server.start();
+
+        // Créer plusieurs clients et les lancer
+        for (int i = 0; i < 5; i++) {
+            EchoClient client = new EchoClient(broker, "TestBroker", 3);
+            client.start();
+        }
+        //utiliser port différents pour les clients
+        //sinon pas représentatif car les messages envoyés / attendus sont toujours les mêmes
+
+        // Attendre la fin des threads pour terminer
+        try {
+            server.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+

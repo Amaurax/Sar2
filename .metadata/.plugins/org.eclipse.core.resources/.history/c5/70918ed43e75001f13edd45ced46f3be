@@ -1,0 +1,51 @@
+package task1.tests.echo;
+public class EchoTest {
+    public static void main(String[] args) {
+        // Créer un Broker unique partagé par toutes les tâches
+        Broker sharedBroker = new BrokerImpl("SharedBroker");
+
+        // Lancer le serveur dans un thread séparé avec une implémentation Runnable
+        EchoServer server = new EchoServer(sharedBroker, () -> {
+            try {
+                // Boucle pour accepter des connexions et gérer les communications
+                while (true) {
+                    Channel channel = sharedBroker.accept(3);
+                    byte[] buffer = new byte[256];
+                    int bytesRead;
+                    while ((bytesRead = channel.read(buffer, 0, buffer.length)) != -1) {
+                        channel.write(buffer, 0, bytesRead); // Echo les données
+                    }
+                    channel.disconnect();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        server.start();  // Démarrer le serveur
+
+        // Créer et lancer plusieurs clients avec le même Broker
+        for (int i = 0; i < 5; i++) {
+            EchoClient client = new EchoClient(sharedBroker, () -> {
+                try {
+                    Channel channel = sharedBroker.connect("SharedBroker", 3);
+                    byte[] sequence = new byte[255];
+                    for (int j = 0; j < 255; j++) {
+                        sequence[j] = (byte) (j + 1);
+                    }
+                    channel.write(sequence, 0, sequence.length);
+                    byte[] echo = new byte[255];
+                    int bytesRead = channel.read(echo, 0, echo.length);
+                    for (int j = 0; j < bytesRead; j++) {
+                        if (echo[j] != sequence[j]) {
+                            System.out.println("Erreur d'echo à l'octet : " + j);
+                        }
+                    }
+                    channel.disconnect();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            client.start(); // Démarrer le client
+        }
+    }
+}
