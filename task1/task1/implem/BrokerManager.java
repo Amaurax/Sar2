@@ -10,9 +10,9 @@ public class BrokerManager {
 
 		
 		//  synchronized static
-		public static void addBroker(CBroker broker) throws IllegalArgumentException {
+		public synchronized static void addBroker(CBroker broker) throws IllegalArgumentException {
 			if (isNameUsed(broker.name))
-				throw new IllegalArgumentException("Broker name already used (" + broker.name + ")");
+				throw new IllegalArgumentException("Broker" + broker.name + "already exists");
 			brokers.put(broker.name, broker);
 		}
 
