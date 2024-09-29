@@ -1,14 +1,17 @@
 package task1.tests.echo;
 import java.io.IOException;
 
+import task1.implem.CBroker;
+import task1.implem.CChannel;
+
 public class EchoClient extends Task {
-    public EchoClient(Broker broker) {
+    public EchoClient(CBroker broker) {
     	//Runnable à définir dans echotest de préférdnce ?
         super(broker, new Runnable() {
             @Override
             public void run() {
                 try {
-                    Channel channel = broker.connect("SharedBroker", 3); // Connexion au serveur
+                    CChannel channel = (CChannel) broker.connect("Broker1", 3); // Connexion au serveur
                     byte[] sequence = new byte[255];
                     for (int j = 0; j < 255; j++) {
                         sequence[j] = (byte) (j + 1);

@@ -92,6 +92,11 @@ public class CBroker extends Broker {
 		}
 		return rdv.getChannel();
 	}
+
+
+	public String getName() {
+		return name;
+	}
 	
 
 
