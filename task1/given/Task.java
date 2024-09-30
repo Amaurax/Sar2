@@ -10,4 +10,11 @@ public abstract class Task extends Thread {
         // Retourne le broker de la tâche actuelle
         return null; // A implémenter selon les besoins
     }
+    
+    Task(QueueBroker b, Runnable r) {
+	}
+    
+    QueueBroker getQueueBroker() {
+		return null;
+	}
 }

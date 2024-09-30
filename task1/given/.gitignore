@@ -5,3 +5,5 @@
 /Task.class
 /Channel.class
 /CircularBuffer.class
+/QueueBroker.class
+/MessageQueue.class
