@@ -25,7 +25,7 @@ public class Rdv {
 		ac = new CChannel(ab, port);
 		if (cc != null) {
 			cc.connect(ac,  ab.getName());
-			notify();
+//			notify();
 		} else
 			_wait();
 		return ac; 		

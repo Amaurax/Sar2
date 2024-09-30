@@ -16,7 +16,7 @@ public abstract class Task extends Thread {
     public void run() {
         // Exécute le Runnable associé à cette tâche
         if (task != null) {
-            task.run();
+           task.run();
         } else {
             System.out.println("No task defined for this thread.");
         }

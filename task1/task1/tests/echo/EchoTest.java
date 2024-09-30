@@ -12,7 +12,7 @@ public class EchoTest {
         // Lancer le serveur
         EchoServer server = new EchoServer(b1);
         server.start();
-        
+       
         System.out.println("Hello2!");
         
         // Lancer plusieurs clients
