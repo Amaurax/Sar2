@@ -7,73 +7,125 @@ import given.CircularBuffer;
 
 public class CChannel extends Channel {
 
-	// Input and output buffers
-	private CircularBuffer in, out;
-	// Disconnection state flag
-	private boolean disconnected = false;
-	// The Channel you are communicating with ('distant' channel)
-	private CChannel linkedChannel;
-	// Communication port
-	private int port;
+	CircularBuffer in, out;
+	CChannel linkedChannel;
+	boolean disconnected = false;
+	int port;
+	boolean dangling;
+	String rname;
 
 	//
 	protected CChannel(Broker broker, int port) {
-		this.in = new CircularBuffer(256);
-		this.out = new CircularBuffer(256);
-	}
-
-	//
-	protected CChannel(Broker broker, int port, CChannel channel) {
+		super();
 		this.port = port;
-		this.linkedChannel = channel;
-		channel.setLinkedChannel(this);
-		this.in = channel.getOutBuffer();
-		this.out = channel.getInBuffer();
+		this.in = new CircularBuffer(256);
+	}
+
+
+	
+	void connect(CChannel rch, String name) {
+		this.linkedChannel = rch;
+		rch.linkedChannel = this;
+		this.out = rch.in;
+		rch.out = this.in;
+		rname = name;
 	}
 
 	//
 	@Override
-	public synchronized int read(byte[] bytes, int offset, int length) throws InterruptedException {
+	public synchronized int read(byte[] bytes, int offset, int length) throws Exception, InterruptedException {
+		if (disconnected)
+			throw new Exception("disconnected");
 	    int readbytes = 0;
-	    while (length - readbytes > 0) {
-	        while (in.empty()) {
-	            // Si buffer vide, on attend qu'il y ait des données
-	            wait();  // Attente
-	        }
-	        // Lire un octet du buffer
-	        bytes[offset + readbytes] = in.pull();
-	        readbytes++;
+	    try {
+	    	while (readbytes == 0) {
+	    		if (in.empty()) {
+	    			synchronized (in) {
+	    				while (in.empty()) {
+	    					if (disconnected || dangling)
+	    						throw new Exception("disconnected");
+	    					try {
+	    						in.wait();
+	    					} catch (InterruptedException ex) {
+	    						// nothing to do here 
+	    					}
+	    				}
+	    			}
+	    		}
+	    		while (readbytes < length && !in.empty()) {
+	    			byte val = in.pull();
+	    			bytes[offset + readbytes] = val;
+	    			readbytes++;
+	    		}
+	    		if (readbytes != 0) 
+	    			synchronized (in) {
+	    				in.notify();
+	    			}
+	    	}
+	    }  catch (Exception ex) {
+	    		if (!disconnected) {
+	    			disconnected = true;
+	    			synchronized (out) {
+	    				out.notifyAll();
+	    			}
+	    		}
+	    		throw ex;
+	    	}
+	    	return readbytes;
 	    }
-	    notify();
-	    return readbytes;  // Retourner le nombre d'octets effectivement lus
-	}
-
+	
+	    	
 
 	//
 	@Override
-	public synchronized int write(byte[] bytes, int offset, int length) throws InterruptedException {
-	    int writtenbytes = 0;
-	    while (length - writtenbytes > 0) {
-	        while (out.full()) {
-	            // Si buffer plein, on attend qu'il y ait de la place
-	            wait();  // Attente
-	        }
-	        // écrireun octet du buffer
-	        out.push(bytes[offset+writtenbytes]);
-	        writtenbytes++;
-	    }
-	    notify();
-	    return writtenbytes;  // Retourner le nombre d'octets effectivement écrits
+	public synchronized int write(byte[] bytes, int offset, int length) throws InterruptedException, Exception {
+		if (disconnected)
+			throw new Exception("disconnected");
+		int wbytes = 0;
+		while (wbytes == 0) {
+			if (out.full()) {
+				synchronized (out) {
+					while (out.full()) {
+						if (disconnected())
+							throw new Exception("Disconnected");
+						if (dangling)
+							return length;
+						try {
+							out.wait();
+						} catch (InterruptedException ex) {
+							//nothing to do here
+						}
+					}
+				}
+			}
+			while (wbytes < length && !out.full()) {
+				byte val = bytes[offset + wbytes];
+				out.push(val);
+				wbytes++;
+			}
+			if (wbytes !=0)
+				synchronized (out) {
+					out.notify();
+			}
+		}
+		return wbytes;
 	}
 
-	/*
-	 * Set the disconnected flag to true.
-	 * In a synchronized block on the in buffer object, notify all waiting threads on the in buffer.
-	 * In a synchronized block on the out buffer object, notify all waiting threads on the out buffer.
-	 */
+	
 	@Override
 	public void disconnect() {
-		this.disconnected = true;
+		synchronized(this) {
+			if (this.disconnected()) 
+				return;
+			disconnected = true;
+			linkedChannel.dangling = true;
+		}
+		synchronized (out) {
+			out.notifyAll();
+		}
+		synchronized (in) {
+			in.notifyAll();
+		}
 	}
 
 	//

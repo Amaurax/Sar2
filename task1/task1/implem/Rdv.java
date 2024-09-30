@@ -1,50 +1,48 @@
 package task1.implem;
 
+import given.Broker;
+import given.Channel;
+
 public class Rdv {
 
 
-	private boolean hasConnect=false, hasAccept=false;
-	//channel de communication distant
-	private CChannel channel;
-	//the broker a garder pour 2nde tache
-	private CBroker distantBroker;
+	CChannel ac, cc;
+	Broker ab, cb; 
+		
+	private void _wait() {
+		while (ac == null || cc == null) {
+			try {
+				wait();
+			} catch (InterruptedException ex) {
+			//nothing to do here
+			}
+		}
+	}
 	
 	// broker : accept
-	public synchronized void accept(CBroker broker) {
-		hasAccept = true;
-		distantBroker = broker;
+	synchronized Channel accept(CBroker ab, int port) {
+		this.ab = ab;
+		ac = new CChannel(ab, port);
+		if (cc != null) {
+			cc.connect(ac,  ab.getName());
+//			notify();
+		} else
+			_wait();
+		return ac; 		
 	}
 	
 	// broker : connect
-	public synchronized void connect(CBroker broker) {
-		hasConnect = true;
-		distantBroker = broker;
+	 synchronized Channel connect(CBroker cb, int port) {
+		this.cb = cb;
+		cc = new CChannel(cb, port);
+		if (ac != null) {
+			ac.connect(cc, cb.getName());
+			notify();
+		} else
+			_wait();
+		return cc;
 	}
 	
-	//
-	public synchronized boolean hasAccept() {
-		return hasAccept;
-	}
-	
-	//
-	public synchronized boolean hasConnect() {
-		return hasConnect;
-	}
-	
-	//
-	public CChannel getChannel() {
-		return channel;
-	}
-
-	//
-	public void setChannel(CChannel channel) {
-		this.channel = channel;
-	}
-
-	//
-	public CBroker getDistantBroker() {
-		return distantBroker;
-	}
 
 	
 }

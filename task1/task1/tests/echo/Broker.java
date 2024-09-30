@@ -3,7 +3,7 @@ package task1.tests.echo;
 public abstract class Broker {
 	    protected String name;
 
-	    public Broker(String name) {
+    public Broker(String name) {
 	        this.name = name;
 	    }
 
