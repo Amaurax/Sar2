@@ -1,11 +1,7 @@
 package given;
 
-/**
- * This circular buffer of bytes can be used to pass bytes between two threads:
- * one thread pushing bytes in the buffer and the other pulling bytes from the
- * buffer. The buffer policy is FIFO: first byte in is the first byte out.
- */
 public class CircularBuffer {
+
     volatile int m_tail, m_head;
     volatile byte m_bytes[];
 
