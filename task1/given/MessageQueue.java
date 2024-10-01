@@ -1,10 +1,11 @@
 package given;
 
 public abstract class MessageQueue {
-	public void send(byte[] bytes, int offset, int length) {
+	
+	public void send(byte[] bytes, int offset, int length) throws Exception {
 	}
 	
-	public byte[] receive() {
+	public byte[] receive() throws Exception {
 		return null;
 	}
 	

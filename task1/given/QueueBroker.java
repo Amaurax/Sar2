@@ -2,16 +2,14 @@ package given;
 
 public abstract class QueueBroker {
 	
-	public String name;
-	public Broker cbroker; // regular channel broker to handle connection
+	public Broker broker; // regular channel broker to handle connection
 
-
-	public QueueBroker(Broker broker, String name) {
-		this.name = name;
-		this.cbroker = broker;
+	
+	public QueueBroker(Broker cbroker) {
+		this.broker = cbroker;
 	}
-	
-	
+
+
 	public MessageQueue accept(int port) {
 		return null;
 	}

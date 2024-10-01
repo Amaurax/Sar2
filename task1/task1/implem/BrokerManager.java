@@ -2,11 +2,13 @@ package task1.implem;
 import java.util.HashMap;
 import java.util.Map;
 
+import given.Broker;
+
 
 public class BrokerManager {
 
 	// map giving the Broker from its name, static ? pas indispensable si un seul brkmngr
-	private static Map<String, CBroker> brokers = new HashMap<>();
+	private static Map<String, Broker> brokers = new HashMap<>();
 
 		
 		//  synchronized static
@@ -21,7 +23,7 @@ public class BrokerManager {
 		return brokers.containsKey(name);
 	}
 		
-	public static CBroker getBroker(String name) {
+	public static Broker getBroker(String name) {
 		return brokers.get(name);
 	}
 
