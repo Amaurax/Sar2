@@ -1,0 +1,40 @@
+abstract class QueueBroker ( QueueBroker(String name);
+ interface Acceptlistener ( void accepted(MessageQueue queue);
+ 
+ boolean bind(int port, AcceptListener listener);
+ boolean unbind(int port);
+
+interface ConnectListener
+void connected(MessageQueue queue);
+void refused ();
+
+boolean connect(String name, int Por 3 ConnectListener listener);
+
+
+abstract class MessageQueue (
+interface Listener (
+void received(byte[] msg);
+void closed ();
+
+void setListener (Listener l);
+
+boolean send(byte[] bytes);
+boolean send(byte[] bytes, int offset, int length);
+void close();
+boolean closed();
+
+
+# Connection
+Une Messagequeue est établie lorsque sur le meme port d'un meme queuebroker,
+un acceptlistener et un connectlistener sont réunis. Pas d'ordre
+nécessaire, c'est un rdv symétrique
+
+MessageQueue : soit ouvert soit fermée, deviet ferméedès qu'un des
+deux côtés le demande.
+
+# Envoi
+Aliasaing partagé dans send : on return true lorsqu'on accepte d'envoyer,
+mais l'envoi ne se fait pas nécessairement immmédiatement
+Soit dire que les bytes[] passés en rguement doivent être oubliés par celui qui les passe
+Soit faire une copie dans send si pas eu le temps d'envoyer avant return
+Soit transfert d'ownership temporaire (ajout de void sent() dans Listener)
