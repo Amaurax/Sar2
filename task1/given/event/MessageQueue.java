@@ -1,23 +1,24 @@
 package given.event;
 
 public abstract class MessageQueue {
-	interface Listener {
+	
+	public interface Listener {
 		void received(byte[] msg);
 		void sent(Message msg);
 		void closed();
 	}
 	
-	void setListener(Listener l) {
+	public void setListener(Listener l) {
 	}
 	
-	boolean send(Message msg) {
+	public boolean send(byte[] msg) {
 		return false;
 	}
 	
-	void close() {
+	public void close() {
 	}
 	
-	boolean closed() {
+	public boolean closed() {
 		return false;
 	}
 }
